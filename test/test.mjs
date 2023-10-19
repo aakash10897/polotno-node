@@ -140,3 +140,35 @@ test('Bad font resize', async (t) => {
     },
   });
 });
+
+test('Should clear error with no parallel pages', async (t) => {
+  const instance = await createInstance({ key, useParallelPages: false });
+  const json = JSON.parse(fs.readFileSync('./test/samples/bad-image-url.json'));
+  try {
+    await instance.jsonToDataURL(json);
+  } catch (e) {
+    t.is(e.message, 'image 2YuCaDrZFa');
+  }
+  const json2 = JSON.parse(fs.readFileSync('./test/samples/polotno-1.json'));
+  await instance.jsonToDataURL(json2);
+  t.assert(true);
+});
+
+test('Should throw error when several task in the process for non parallel', async (t) => {
+  const instance = await createInstance({ key, useParallelPages: false });
+  const json = JSON.parse(fs.readFileSync('./test/samples/polotno-1.json'));
+  try {
+    await Promise.all([json, json].map((j) => instance.jsonToDataURL(j)));
+    t.assert(false, 'no error triggered');
+  } catch (e) {
+    t.assert(true, 'error triggered');
+  }
+});
+
+test('Should not throw error when several task in sequence for non parallel', async (t) => {
+  const instance = await createInstance({ key, useParallelPages: false });
+  const json = JSON.parse(fs.readFileSync('./test/samples/polotno-1.json'));
+  await instance.jsonToDataURL(json);
+  await instance.jsonToDataURL(json);
+  t.assert(true);
+});
